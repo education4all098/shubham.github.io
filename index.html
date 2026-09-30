@@ -2114,7 +2114,25 @@ function authSetError(message) {
   el.style.display = message ? 'block' : 'none';
 }
 
+function clearLoginFormCredentials() {
+  const form = document.getElementById('auth-form');
+  const emailInput = document.getElementById('auth-email');
+  const passwordInput = document.getElementById('auth-password');
+  try {
+    if (form) form.reset();
+  } catch (e) {
+    console.warn('Login form reset failed:', e);
+  }
+  // Explicitly clear both fields on every return to the login screen so
+  // forced/idle/session-replacement logout cannot leave usable credentials
+  // sitting in the form. Browser password managers may still offer an
+  // autofill prompt, which is controlled by the browser rather than the app.
+  if (emailInput) emailInput.value = '';
+  if (passwordInput) passwordInput.value = '';
+}
+
 function showAuthScreen() {
+  clearLoginFormCredentials();
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('welcome').style.display = 'none';
   document.getElementById('app').classList.remove('active');
@@ -2289,6 +2307,13 @@ async function signOutHosted(reason = 'manual_sign_out') {
   }
 }
 
+
+/* =========================================================================
+   V44.2: clear login credentials whenever the session returns to login
+   - Forced/idle/session-replacement/manual logout clears email + password
+     from the login form before the sign-in screen is shown.
+   - Browser password-manager autofill remains under browser control.
+   ========================================================================= */
 
 /* =========================================================================
    V44: managed login/session security
